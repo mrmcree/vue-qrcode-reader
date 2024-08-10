@@ -44,7 +44,7 @@ const error = ref("");
 const cameraIsReady = ref(false);
 const isSupportTorch = ref(false); // 是否支持闪光灯
 const torch = ref(false); // 闪光灯状态
-const zoom = ref(1); // 闪光灯状态
+const zoom = ref(3); // 闪光灯状态
 const paused=ref(false)
 // 相机配置选项: 'user'|'environment' （默认：environment）
 const selectedConstraints = ref({ facingMode: "environment" });

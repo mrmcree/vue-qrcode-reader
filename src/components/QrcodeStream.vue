@@ -1,8 +1,8 @@
 <template>
   <div :style="wrapperStyle">
-    <!-- 
-      All immediate children of the wrapper div are stacked upon each other. 
-      The z-index is implicitly given by the (inverse) element order. 
+    <!--
+      All immediate children of the wrapper div are stacked upon each other.
+      The z-index is implicitly given by the (inverse) element order.
 
       The video element is at the very bottom, the pause frame canvas is above it,
       the tracking layer is yet above and finally at the very top is the slot
@@ -76,6 +76,10 @@ const props = defineProps({
   },
   track: {
     type: Function
+  },
+  zoom:{
+    type: Number,
+    default: 1
   }
 })
 
@@ -164,7 +168,8 @@ const cameraSettings = computed(() => {
   return {
     torch: props.torch,
     constraints: constraintsCached.value,
-    shouldStream: isMounted.value && !props.paused
+    shouldStream: isMounted.value && !props.paused,
+    zoom: props.zoom
   }
 })
 
