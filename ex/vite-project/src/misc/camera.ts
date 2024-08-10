@@ -10,7 +10,7 @@ type StartTaskResult = {
     stream: MediaStream
     capabilities: Partial<MediaTrackCapabilities>
     constraints: MediaTrackConstraints
-    isTorchOn: boolean,
+    isTorchOn: boolean
   }
 }
 
@@ -35,7 +35,17 @@ async function runStartTask(
   constraints: MediaTrackConstraints,
   torch: boolean,
   zoom:number
-): Promise<StartTaskResult> {
+): Promise<{
+  data : {
+    isTorchOn : boolean;
+    capabilities : Partial<MediaTrackCapabilities>;
+    stream : MediaStream;
+    track : MediaStreamTrack;
+    constraints : MediaTrackConstraints;
+    videoEl : HTMLVideoElement
+  };
+  type : string
+}> {
   console.debug(
     '[vue-qrcode-reader] starting camera with constraints: ',
     JSON.stringify(constraints)
@@ -109,6 +119,7 @@ async function runStartTask(
 
   let isTorchOn = false
   if (torch && capabilities.torch) {
+
     await track.applyConstraints({ advanced: [{ torch: true }] })
     isTorchOn = true
   }
@@ -123,6 +134,7 @@ async function runStartTask(
     data: {
       videoEl,
       stream,
+      track,
       capabilities,
       constraints,
       isTorchOn
@@ -155,7 +167,7 @@ export async function start(
             videoEl: prevVideoEl,
             stream: prevStream,
             constraints: prevConstraints,
-            isTorchOn: prevIsTorchOn
+            isTorchOn: prevIsTorchOn,
           }
         } = prevTaskResult
         // TODO: Should we keep this object comparison
