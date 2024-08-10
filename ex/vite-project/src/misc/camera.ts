@@ -29,7 +29,18 @@ type TaskResult = StartTaskResult | StopTaskResult | FailedTask
 let taskQueue: Promise<TaskResult> = Promise.resolve({ type: 'stop', data: {} })
 
 type CreateObjectURLCompat = (obj: MediaSource | Blob | MediaStream) => string
+let videotrack =null
+let isTorchOning=false
+export  async function setZoom(zoom = 1) {
+  if(videotrack==null) return
+  await videotrack.applyConstraints({ advanced: [{ zoom: zoom }] })
 
+}
+export async function setTorch(torch: boolean){
+  if(videotrack==null) return
+  await videotrack.applyConstraints({ advanced: [{ torch: torch }] })
+  isTorchOning=torch
+}
 async function runStartTask(
   videoEl: HTMLVideoElement,
   constraints: MediaTrackConstraints,
@@ -114,7 +125,7 @@ async function runStartTask(
   await timeout(500)
 
   const [track] = stream.getVideoTracks()
-
+  videotrack=track
   const capabilities: Partial<MediaTrackCapabilities> = track?.getCapabilities?.() ?? {}
 
   let isTorchOn = false
@@ -235,6 +246,7 @@ async function runStopTask(
 
   for (const track of stream.getTracks()) {
     isTorchOn ?? (await track.applyConstraints({ advanced: [{ torch: false }] }))
+    isTorchOning ?? (await track.applyConstraints({ advanced: [{ torch: false }] }))
     stream.removeTrack(track)
     track.stop()
   }

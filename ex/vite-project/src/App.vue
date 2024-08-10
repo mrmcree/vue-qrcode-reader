@@ -15,7 +15,8 @@
       @camera-on="onCameraReady"
     >
       <i class="i-material-symbols-cancel text-white fixed text-lg top-5 left-5 z-10" @click="handleClose"></i>
-      <div class="qr-scanner" v-if="!loading">
+      <div class="qr-scanner" v-if="!loading" @click="zoom=getRandomInt(1,4)">
+        {{ zoom }}
         <div class="box" >
           <div class="line" :style="{animationPlayState: paused ? 'paused': 'running'}"></div>
           <div class="angle"></div>
@@ -23,7 +24,7 @@
       </div>
       <div class="torch-wrap flex  text-white text-2xl items-end justify-center" @click="() => (torch = !torch)" v-if="isSupportTorch">
 
-        打开大量的拉拉
+              {{ torch ? '关闭' : '开启' }}
         <i class="i-ion:md-flash  " v-if="!torch"></i>
         <i class="i-ion:md-flash-off" v-else></i>
 
@@ -44,11 +45,15 @@ const error = ref("");
 const cameraIsReady = ref(false);
 const isSupportTorch = ref(false); // 是否支持闪光灯
 const torch = ref(false); // 闪光灯状态
-const zoom = ref(3); // 闪光灯状态
+const zoom = ref(1); // 闪光灯状态
 const paused=ref(false)
 // 相机配置选项: 'user'|'environment' （默认：environment）
 const selectedConstraints = ref({ facingMode: "environment" });
-
+function getRandomInt(min: number, max: number): number {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 // 检测到二维码后绘制画布类型
 function paintBoundingBox(detectedCodes: any, ctx: CanvasRenderingContext2D) {
   for (const detectedCode of detectedCodes) {
