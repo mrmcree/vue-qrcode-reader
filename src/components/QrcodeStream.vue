@@ -47,6 +47,7 @@ import {
   type PropType,
   type CSSProperties
 } from 'vue'
+import { setTorch , setZoom } from '../misc/camera'
 
 import { keepScanning, setScanningFormats } from '../misc/scanner'
 import * as cameraController from '../misc/camera'
@@ -166,13 +167,18 @@ onUnmounted(() => {
 // changes of this computed value.
 const cameraSettings = computed(() => {
   return {
-    torch: props.torch,
     constraints: constraintsCached.value,
     shouldStream: isMounted.value && !props.paused,
-    zoom: props.zoom
   }
 })
+watch(()=>props.zoom, (newZoom)=>{
 
+  cameraController.setZoom(newZoom)
+})
+watch(()=>props.torch, (torch)=>{
+
+  cameraController.setTorch(torch)
+})
 watch(
   cameraSettings,
   async (newSettings) => {
@@ -209,6 +215,7 @@ watch(
         // However, if the component is destroyed while we are in the middle of starting the camera, then
         // the `onUnmounted` hook might fire before the following promise resolves ...
         const capabilities = await cameraController.start(videoEl, newSettings)
+//        await track.applyConstraints(constraints);
         // ... thus we check whether the component is still alive right after the promise resolves and stop
         // the camera otherwise.
         if (!isMounted.value) {

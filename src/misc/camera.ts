@@ -10,7 +10,7 @@ type StartTaskResult = {
     stream: MediaStream
     capabilities: Partial<MediaTrackCapabilities>
     constraints: MediaTrackConstraints
-    isTorchOn: boolean,
+    isTorchOn: boolean
   }
 }
 
@@ -29,13 +29,34 @@ type TaskResult = StartTaskResult | StopTaskResult | FailedTask
 let taskQueue: Promise<TaskResult> = Promise.resolve({ type: 'stop', data: {} })
 
 type CreateObjectURLCompat = (obj: MediaSource | Blob | MediaStream) => string
+let videotrack =null
+let isTorchOning=false
+export  async function setZoom(zoom = 1) {
+  if(videotrack==null) return
+  await videotrack.applyConstraints({ advanced: [{ zoom: zoom }] })
 
+}
+export async function setTorch(torch: boolean){
+  if(videotrack==null) return
+  await videotrack.applyConstraints({ advanced: [{ torch: torch }] })
+  isTorchOning=torch
+}
 async function runStartTask(
   videoEl: HTMLVideoElement,
   constraints: MediaTrackConstraints,
   torch: boolean,
   zoom:number
-): Promise<StartTaskResult> {
+): Promise<{
+  data : {
+    isTorchOn : boolean;
+    capabilities : Partial<MediaTrackCapabilities>;
+    stream : MediaStream;
+    track : MediaStreamTrack;
+    constraints : MediaTrackConstraints;
+    videoEl : HTMLVideoElement
+  };
+  type : string
+}> {
   console.debug(
     '[vue-qrcode-reader] starting camera with constraints: ',
     JSON.stringify(constraints)
@@ -104,11 +125,12 @@ async function runStartTask(
   await timeout(500)
 
   const [track] = stream.getVideoTracks()
-
+  videotrack=track
   const capabilities: Partial<MediaTrackCapabilities> = track?.getCapabilities?.() ?? {}
 
   let isTorchOn = false
   if (torch && capabilities.torch) {
+
     await track.applyConstraints({ advanced: [{ torch: true }] })
     isTorchOn = true
   }
@@ -123,6 +145,7 @@ async function runStartTask(
     data: {
       videoEl,
       stream,
+      track,
       capabilities,
       constraints,
       isTorchOn
@@ -151,13 +174,13 @@ export async function start(
         // previous task is a start task
         // we'll check if we can reuse the previous result
         const {
-          data: {
-            videoEl: prevVideoEl,
-            stream: prevStream,
-            constraints: prevConstraints,
-            isTorchOn: prevIsTorchOn
-          }
-        } = prevTaskResult
+                data: {
+                  videoEl: prevVideoEl,
+                  stream: prevStream,
+                  constraints: prevConstraints,
+                  isTorchOn: prevIsTorchOn,
+                }
+              } = prevTaskResult
         // TODO: Should we keep this object comparison
         // this code only checks object sameness not equality
         // deep comparison requires snapshots and value by value check
@@ -223,6 +246,7 @@ async function runStopTask(
 
   for (const track of stream.getTracks()) {
     isTorchOn ?? (await track.applyConstraints({ advanced: [{ torch: false }] }))
+    isTorchOning ?? (await track.applyConstraints({ advanced: [{ torch: false }] }))
     stream.removeTrack(track)
     track.stop()
   }
@@ -242,8 +266,8 @@ export async function stop() {
       return prevTaskResult
     }
     const {
-      data: { videoEl, stream, isTorchOn }
-    } = prevTaskResult
+            data: { videoEl, stream, isTorchOn }
+          } = prevTaskResult
     return runStopTask(videoEl, stream, isTorchOn)
   })
   // await the task queue asynchronously
